@@ -1,0 +1,33 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Liked Posts</h5>
+                <p class="card-text">{{ liked_posts_count }} posts available</p>
+                <a href="{% url 'liked_posts' %}" class="btn btn-primary">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Products</h5>
+                <p class="card-text">{{ products_count }} products in catalog</p>
+                <a href="{% url 'products' %}" class="btn btn-primary">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Generated Ads</h5>
+                <p class="card-text">{{ generated_ads_count }} ads created</p>
+                <a href="{% url 'generated_ads' %}" class="btn btn-primary">View All</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

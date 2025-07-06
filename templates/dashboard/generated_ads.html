@@ -1,0 +1,147 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<h2>Generated Ads</h2>
+<div class="row">
+    {% for ad in generated_ads %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <!-- Safe Image Handling -->
+            {% if ad.image %}
+                {% if ad.image.url %}
+                    <img src="{{ ad.image.url }}" class="card-img-top" alt="Generated Ad" style="height: 200px; object-fit: cover;">
+                {% else %}
+                    <!-- Image field exists but no file associated -->
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-image fa-3x mb-2"></i>
+                            <p>No image generated</p>
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- No image field set -->
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-clock fa-3x mb-2"></i>
+                        <p>Image pending</p>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <div class="card-body">
+                <h5 class="card-title">{{ ad.campaign.name }}</h5>
+                <p class="card-text">{{ ad.ad_copy|truncatechars:150 }}</p>
+                <p class="text-muted">Platform: {{ ad.get_platform_display }}</p>
+                
+                <!-- Products Information -->
+                {% if ad.products.count > 0 %}
+                    <div class="mb-3">
+                        <small class="text-muted">Products ({{ ad.products.count }}):</small>
+                        <div class="mt-1">
+                            {% for product in ad.products.all|slice:":3" %}
+                                <span class="badge bg-secondary me-1">{{ product.name|truncatechars:20 }}</span>
+                            {% endfor %}
+                            {% if ad.products.count > 3 %}
+                                <span class="badge bg-light text-dark">+{{ ad.products.count|add:"-3" }} more</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Source Post Information -->
+                {% if ad.source_post %}
+                    <div class="mb-3">
+                        <small class="text-muted">Source: Post {{ ad.source_post.id }}</small>
+                    </div>
+                {% endif %}
+                
+                <!-- Timestamp -->
+                <div class="mb-3">
+                    <small class="text-muted">Created: {{ ad.created_at|date:"M d, Y H:i" }}</small>
+                </div>
+                
+                <div class="btn-group">
+                    <a href="#" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a href="#" class="btn btn-sm btn-outline-success">Publish</a>
+                    <a href="{% url 'ad_detail' ad.id %}" class="btn btn-sm btn-outline-info">View Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h4 class="alert-heading">No ads generated yet!</h4>
+            <p>Start by creating your first ad from a liked post.</p>
+            <hr>
+            <p class="mb-0">
+                <a href="{% url 'liked_posts' %}" class="btn btn-primary">Browse Liked Posts</a>
+            </p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="Generated ads pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Add some custom CSS if needed -->
+<style>
+    .card-img-top {
+        transition: transform 0.3s ease;
+    }
+    
+    .card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+    
+    .badge {
+        font-size: 0.75em;
+    }
+    
+    .btn-group .btn {
+        margin-right: 0.25rem;
+    }
+</style>
+{% endblock %}

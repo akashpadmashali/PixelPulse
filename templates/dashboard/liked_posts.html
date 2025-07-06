@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<h2>Your Liked Posts</h2>
+<div class="row">
+    {% for post in liked_posts %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <img src="{{ post.image_url }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+            <div class="card-body">
+                <h5 class="card-title">Post #{{ forloop.counter }}</h5>
+                <p class="card-text">{{ post.description|truncatechars:100 }}</p>
+                <p>
+                    {% for label in post.labels %}
+                    <span class="badge bg-secondary">{{ label }}</span>
+                    {% endfor %}
+                </p>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'create_ad' post.id %}" class="btn btn-sm btn-primary">Create Ad</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">No liked posts found.</div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

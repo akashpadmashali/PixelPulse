@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<h2>Product Catalog</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Features</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+        <tr>
+            <td>{{ product.name }}</td>
+            <td>{{ product.category }}</td>
+            <td>
+                {% for feature in product.features %}
+                <span class="badge bg-info">{{ feature }}</span>
+                {% endfor %}
+            </td>
+            <td>
+                <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center">No products found</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

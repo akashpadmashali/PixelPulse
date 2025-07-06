@@ -1,0 +1,186 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3>Create New Ad</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Display Messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Source Post Preview -->
+                    <div class="mb-4 border-bottom pb-3">
+                        <h5>Inspired by this post:</h5>
+                        <div class="card">
+                            {% if post.image_url %}
+                            <img src="{{ post.image_url }}" class="card-img-top" 
+                                 onerror="this.src='https://via.placeholder.com/800x400?text=Image+Not+Available'" 
+                                 style="max-height: 400px; object-fit: contain;">
+                            {% else %}
+                            <img src="https://via.placeholder.com/800x400?text=No+Image+Available" 
+                                 class="card-img-top" style="max-height: 400px; object-fit: contain;">
+                            {% endif %}
+                            <div class="card-body">
+                                <p class="card-text">{{ post.description|default:"No description available" }}</p>
+                                <div class="tag-container">
+                                    {% if post.labels %}
+                                        {% for label in post.labels %}
+                                        <span class="badge bg-secondary me-1">{{ label }}</span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted">No labels available</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ad Creation Form -->
+                    <form method="post" enctype="multipart/form-data" id="ad-creation-form">
+                        {% csrf_token %}
+                        
+                        <!-- Campaign Selection -->
+                        <div class="mb-3">
+                            <label for="{{ form.campaign.id_for_label }}" class="form-label">Select Campaign *</label>
+                            {{ form.campaign }}
+                            {% if form.campaign.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.campaign.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Product Selection -->
+                        <div class="mb-3">
+                            <label class="form-label">Selected Products</label>
+                            <div class="selected-products-container">
+                                {% if product_choices %}
+                                    <div class="list-group">
+                                        {% for product in product_choices %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex align-items-center">
+                                                <input class="form-check-input me-3" type="checkbox" 
+                                                       name="products" value="{{ product.id }}" 
+                                                       id="product_{{ product.id }}"
+                                                       {% if product.is_selected %}checked disabled{% endif %}>
+                                                {% if product.image_link %}
+                                                <img src="{{ product.image_link }}" alt="{{ product.name }}" 
+                                                     class="me-3 rounded" style="width: 50px; height: 50px; object-fit: contain;"
+                                                     onerror="this.style.display='none'">
+                                                {% endif %}
+                                                <div class="flex-grow-1">
+                                                    <label class="form-check-label" for="product_{{ product.id }}">
+                                                        <strong>{{ product.name|default:"Unnamed Product" }}</strong>
+                                                        <div class="text-muted small">{{ product.category|default:"No category" }}</div>
+                                                        <div class="price-info">
+                                                            {% if product.discounted_price %}
+                                                            <span class="text-danger fw-bold">₹{{ product.discounted_price|floatformat:2 }}</span>
+                                                            {% endif %}
+                                                            {% if product.discount_percentage and product.discount_percentage > 0 %}
+                                                                {% if product.selling_price %}
+                                                                <span class="text-decoration-line-through text-muted small ms-2">₹{{ product.selling_price }}</span>
+                                                                {% endif %}
+                                                                <span class="badge bg-success ms-2">{{ product.discount_percentage }}% OFF</span>
+                                                            {% elif product.selling_price %}
+                                                                <span class="text-primary fw-bold">₹{{ product.selling_price|floatformat:2 }}</span>
+                                                            {% endif %}
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-info">No products available for selection.</div>
+                                {% endif %}
+                            </div>
+                            {% if form.products.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.products.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="generate-btn">
+                                <i class="bi bi-magic me-2"></i> Generate Ad
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tag-container {
+        margin-top: 10px;
+    }
+    .selected-products-container {
+        max-height: 500px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+    }
+    .list-group-item {
+        padding: 12px 15px;
+    }
+    .form-check-input:disabled {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        opacity: 1;
+    }
+    .form-check-input:disabled ~ .form-check-label {
+        opacity: 1;
+    }
+    #generate-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const generateBtn = document.getElementById('generate-btn');
+    
+    // Form submission handling
+    document.getElementById('ad-creation-form').addEventListener('submit', function(e) {
+        const checkedProducts = document.querySelectorAll('input[name="products"]:checked');
+        
+        if (checkedProducts.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one product to generate an ad.');
+            return false;
+        }
+        
+        // Disable button and show loading
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating Ad...';
+        
+        // Re-enable button after 30 seconds as failsafe
+        setTimeout(() => {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<i class="bi bi-magic me-2"></i> Generate Ad';
+        }, 30000);
+    });
+});
+</script>
+{% endblock %}
